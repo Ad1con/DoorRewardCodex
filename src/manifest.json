@@ -1,0 +1,14 @@
+{
+  "namespace": "Adicon",
+  "name": "DoorRewardCodex",
+  "description": "Standing near an exit door's reward preview and opening the Codex lands on that reward's page, the same way it already works for nearby NPCs and items.",
+  "version_number": "1.0.0",
+  "dependencies": [
+    "Hell2Modding-Hell2Modding-1.0.78",
+    "LuaENVY-ENVY-1.2.0",
+    "SGG_Modding-ModUtil-4.0.1",
+    "SGG_Modding-ReLoad-1.0.2"
+  ],
+  "website_url": "https://github.com/Ad1con/DoorRewardCodex",
+  "FullName": "Adicon-DoorRewardCodex"
+}

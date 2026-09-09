@@ -1,0 +1,109 @@
+# DoorRewardCodex -- design notes
+
+Repo-only. Not shipped (`thunderstore.toml` copies only `CHANGELOG.md`,
+`LICENSE` and `src`). This is where the *why* behind `src/main.lua` lives, so
+the shipped file's header comment can stay short. See
+`DOOR_REWARD_CODEX_SPEC.md` and `DOOR_REWARD_CODEX_RESEARCH.md` for the
+citations this was built against; verified 2026-09-06.
+
+## Why every game read goes through `game.*`, never a bare global
+
+`LuaENVY-ENVY` gives each plugin's top-level chunk its own environment table
+(`setfenv`), so a bare `CodexStatus` inside this plugin's own file would read
+*this plugin's* private table, not the game's -- there is nothing there, and
+it silently reads `nil` rather than erroring, which is the worse failure mode.
+`rom.game`, threaded through `on_ready(game)` / `installHooks(game)`, is the
+actual reference to the game's real global table. RealHecate's `main.lua`
+follows the same discipline (`game.ActiveEnemies`, `game.EnemyData`, ...) and
+was the reason to check this before writing a line of logic here -- an early
+draft used bare globals throughout and would have thrown or silently no-op'd
+against the real game the first time it ran, while passing every test that
+also used bare globals for its fakes. The fix touched both `main.lua` and
+`test/harness.lua` at once, which is exactly the trap: a test written with the
+same mistaken assumption as the code agrees with it.
+
+## The snapshot-and-compare, and the edge case it accepts
+
+Hook one snapshots `CodexStatus.SelectedChapterName` and
+`SelectedEntryNames[thatChapter]` before calling `base()`, then compares after.
+If either changed, vanilla found something and this mod does nothing further.
+
+This has one known blind spot, accepted rather than fixed: if vanilla's own
+match happens to resolve to the *same* chapter and entry already selected
+(the player is standing next to the literal thing already open), the
+before/after comparison sees no change and cannot tell that apart from
+"vanilla found nothing." The spec is explicit that the alternative --
+reimplementing vanilla's own search to predict its answer -- is worse, since
+that duplicated logic would need to be kept in sync with vanilla by hand
+forever. The blind spot only matters when a door is *also* in range and would
+otherwise win, which is a narrow coincidence; a test exists for the ordinary
+case (`2.x` in the suite) using an object whose resolution differs from the
+codex's current default specifically so the comparison has something real to
+detect.
+
+## `findCodexMatch` is `SelectNearbyUnlockedEntry`'s own loop, extracted
+
+`CodexLogic.lua:149-163` matches `entryName == nearbyName` via a `pairs`
+double loop rather than direct table indexing. `findCodexMatch` keeps that
+literal shape rather than simplifying to `chapterData.Entries[name]`, even
+though the two are behaviorally identical for unique entry names (and entry
+names are unique -- `CodexOrdering` never repeats one across chapters). The
+reason to keep the loop is not correctness, it is fidelity: a direct-index
+rewrite is a second place this mod's understanding of "how vanilla matches"
+could drift from the real thing without a test noticing, and the loop costs
+nothing extra to keep.
+
+## Devotion vs. `room.CageRewards`: two structurally different splits, one policy
+
+Devotion always offers exactly two Olympian boons
+(`room.Encounter.LootAName` / `LootBName`), confirmed by Caleb, so its chapter
+is hardcoded (`OlympianGods`) rather than resolved -- there is nothing to
+resolve.
+
+`room.CageRewards` (`InteractLogic.lua:1457-1462`) is a list of
+`{ RewardType, ForceLootName }` entries with no such guarantee: 2-5 rewards,
+not necessarily gods, not necessarily sharing a chapter. The policy chosen
+here: resolve every candidate through `findCodexMatch`, take the chapter of
+the FIRST one that resolves (in list order), and mark whichever *other*
+candidates land in that same chapter. If none resolve, do nothing -- the same
+"no entry" outcome an unmatched single reward gets.
+
+This is a judgment call the spec leaves open (it only pins "behaves as a
+split, not a single" as the required, tested behavior). The alternative
+considered and rejected: picking the chapter with the most matching
+candidates rather than the first. That reads better when cage rewards are
+heavily lopsided toward one chapter, but it also means a door's Codex page can
+change based on iteration order of a `pairs`-free but still order-sensitive
+count, for a scenario (multi-chapter cage rewards) that has not been observed
+in practice. First-match is simpler, deterministic from the room's own
+`CageRewards` array order, and errs toward changing the Codex less rather
+than more -- consistent with the mod's overall bias of doing nothing when
+uncertain.
+
+## No ImGui overlay panel
+
+RealHecate ships one because its settings are visual dials (colors, sizes,
+opacity) worth tuning by eye without a restart. This mod has two booleans with
+no visual tuning loop -- a `.cfg` edit and a relaunch is not a meaningfully
+worse experience for either of them, and the settings table in the spec says
+"resist adding more." Building a panel for two checkboxes would be scope the
+mod does not need.
+
+## No hot-reload-sensitive state
+
+The only piece of state that survives across a reload is `splitFlag`, a plain
+local. A hot reload re-runs the whole chunk, which re-initializes it to `nil`
+-- the same state a closed Codex leaves it in. There is nothing here like
+RealHecate's `HooksRegistered` hazard because `on_ready` (where the wraps are
+installed) is documented by `ReLoad.auto_single()` to run once regardless of
+how many times `on_reload` fires afterward, and this mod follows that
+existing, tested contract rather than re-deriving it.
+
+## Why `CloseCodexScreen` needed its own wrap rather than reusing an existing one
+
+The mod already wraps two functions on the codex's open path
+(`SelectNearbyUnlockedEntry`, `CodexOpenChapter`). Clearing `splitFlag` on
+*close* could not piggyback on either of those, since neither runs when the
+screen closes -- a third, minimal wrap was the only option, and it does
+nothing else, matching the "do not bypass, do not gold-plate" shape of the
+other two.
