@@ -111,7 +111,11 @@ local function loadSettings()
         local file = rom.config.config_file:new(path, true)
 
         for key, default in pairs(settings.values) do
-            settings.entries[key] = file:bind("General", key, default, CONFIG_DESCRIPTIONS[key] or "")
+            -- The label answers when a change starts mattering: both keys are
+            -- read at the moment the Codex opens, so a change is live at once.
+            -- See MODDING_HADES2.md, "Say WHEN a setting takes effect".
+            settings.entries[key] = file:bind("General (applies immediately)", key, default,
+                                              CONFIG_DESCRIPTIONS[key] or "")
         end
 
         -- Only adopt a stored value whose type matches the default, so a
