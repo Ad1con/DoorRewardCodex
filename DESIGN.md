@@ -65,8 +65,8 @@ resolve.
 not necessarily gods, not necessarily sharing a chapter. The policy chosen
 here: resolve every candidate through `findCodexMatch`, take the chapter of
 the FIRST one that resolves (in list order), and mark whichever *other*
-candidates land in that same chapter. If none resolve, do nothing -- the same
-"no entry" outcome an unmatched single reward gets.
+candidates land in that same chapter. If none resolve, it falls back to
+Melinoe's page, the same as an unmatched single reward -- see below.
 
 This is a judgment call the spec leaves open (it only pins "behaves as a
 split, not a single" as the required, tested behavior). The alternative
@@ -79,6 +79,40 @@ in practice. First-match is simpler, deterministic from the room's own
 `CageRewards` array order, and errs toward changing the Codex less rather
 than more -- consistent with the mod's overall bias of doing nothing when
 uncertain.
+
+## The Melinoe fallback (added after 1.0.0's first playtest)
+
+Caleb's report, 2026-09-09: gods and the Hammer worked; a door offering
+health, mana, darkness or nectar did nothing when the Codex opened. That was
+1.0.0 working exactly as built and tested (`8.1`/`8.2` at the time, and the
+`14.x` robustness tests) -- there is genuinely no Codex chapter for any
+consumable, confirmed by grepping the shipped `CodexData.lua` in full for
+every internal name involved (`MaxHealthDrop`, `MaxManaDrop`, and the resource
+keys behind "Bones," "Ash" and "Nectar" in `ResourceData.lua`) and finding none
+of them anywhere in it. But "correct" and "wanted" are not the same thing, and
+his call was to land somewhere rather than nowhere: fall back to Melinoe's own
+page, `ChthonicGods` / `PlayerUnit` -- which is not a value this mod invented,
+it is `ScreenData.Codex.DefaultChapter` / `DefaultEntry` (`CodexData.lua:176-
+177`), the exact pair `CodexInit` itself uses before anything has ever been
+selected. Safe by construction for the same reason every other value this mod
+writes is: it is not merely *a* vanilla-legal value, it is the specific one
+vanilla defaults to.
+
+One correction worth recording because it shaped nothing but could easily have
+shaped a wrong choice: Melinoe's own entry (`CodexData.lua:602-645`) was
+guessed to be "a general list of boon rewards." It is not -- it is two short
+lore lines about her (`CodexData_Melinoe_01`/`_02`), unlocked by
+`CompletedRunsCache >= 0` (true from the start of any save) and a
+Chronos-related flag. There is no "which boons pair with this weapon/hero"
+page anywhere in the Codex data as far as this mod's reading of it goes. The
+fallback was implemented anyway, on its own merits (it is vanilla's own
+default, which is reason enough), with the guess about its content corrected
+rather than left standing.
+
+Applies to both the single-reward path and the `CageRewards` path when
+nothing in the list resolves. Devotion is unaffected -- it always resolves
+(confirmed always Olympians), so there is no "nothing matched" case for it to
+fall into.
 
 ## No ImGui overlay panel
 

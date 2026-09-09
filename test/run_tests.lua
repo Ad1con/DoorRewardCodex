@@ -258,18 +258,41 @@ do
 end
 
 -- =============================================================================
--- 8. A reward with no Codex entry -- health, gold (case 7)
+-- 8. A reward with no Codex entry -- falls back to Melinoe's own page
 -- =============================================================================
+-- Caleb's 2026-09-09 playtest: health, mana, darkness, nectar and other
+-- consumables have no Codex entry at all, so vanilla's own default (Melinoe's
+-- page) is where the mod lands instead of leaving the Codex wherever it was.
 do
   local G = boot()
+  -- Started somewhere else entirely, so landing on ChthonicGods/PlayerUnit is
+  -- provably the fallback firing rather than a default that was already there.
+  G.CodexStatus.SelectedChapterName = "Weapons"
+  G.CodexStatus.SelectedEntryNames = { Weapons = "WeaponDagger" }
   G.addDoor({ ChosenRewardType = "MaxHealthDrop" }, 100)
 
   G.SelectNearbyUnlockedEntry()
 
-  check("8.1 nothing changes", G.CodexStatus.SelectedChapterName == "ChthonicGods",
+  check("8.1 lands on Melinoe's chapter", G.CodexStatus.SelectedChapterName == "ChthonicGods",
         tostring(G.CodexStatus.SelectedChapterName))
-  check("8.2 and the entry survives untouched",
-        G.CodexStatus.SelectedEntryNames.ChthonicGods == "NPC_Hecate_01")
+  check("8.2 and her own entry -- vanilla's own default, not a value this mod invented",
+        G.CodexStatus.SelectedEntryNames.ChthonicGods == "PlayerUnit",
+        tostring(G.CodexStatus.SelectedEntryNames.ChthonicGods))
+end
+
+do
+  -- A second consumable name, so 8.x is not accidentally pinned to one string.
+  local G = boot()
+  G.CodexStatus.SelectedChapterName = "OlympianGods"
+  G.CodexStatus.SelectedEntryNames = { OlympianGods = "ZeusUpgrade" }
+  G.addDoor({ ChosenRewardType = "MaxManaDrop" }, 100)
+
+  G.SelectNearbyUnlockedEntry()
+
+  check("8.3 mana falls back the same way health does",
+        G.CodexStatus.SelectedChapterName == "ChthonicGods"
+        and G.CodexStatus.SelectedEntryNames.ChthonicGods == "PlayerUnit",
+        tostring(G.CodexStatus.SelectedChapterName) .. "/" .. tostring(G.CodexStatus.SelectedEntryNames.ChthonicGods))
 end
 
 -- =============================================================================
@@ -419,12 +442,17 @@ end
 do
   local G = boot()
   -- A malformed door: CageRewards present but empty. ipairs sees nothing, so
-  -- the handler should simply find no chapter and leave the Codex alone,
-  -- without raising.
+  -- the handler should find no chapter and fall back to Melinoe, the same as
+  -- any other CageRewards door where nothing resolves, without raising.
+  G.CodexStatus.SelectedChapterName = "Weapons"
+  G.CodexStatus.SelectedEntryNames = { Weapons = "WeaponDagger" }
   G.addDoor({ CageRewards = {} }, 50)
   local ok = pcall(G.SelectNearbyUnlockedEntry)
   check("14.1 an empty CageRewards list does not raise", ok == true)
-  check("14.2 and nothing changed", G.CodexStatus.SelectedChapterName == "ChthonicGods")
+  check("14.2 and falls back to Melinoe's page",
+        G.CodexStatus.SelectedChapterName == "ChthonicGods"
+        and G.CodexStatus.SelectedEntryNames.ChthonicGods == "PlayerUnit",
+        tostring(G.CodexStatus.SelectedChapterName) .. "/" .. tostring(G.CodexStatus.SelectedEntryNames.ChthonicGods))
 end
 
 do

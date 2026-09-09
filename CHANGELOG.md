@@ -11,6 +11,12 @@ version, so the square brackets are load-bearing -- the action looks for
 
 - The settings section is now `General (applies immediately)`. Both keys are
   read at the moment the Codex opens, so a change is live at once.
+- A door reward with no Codex entry (health, mana, darkness, nectar and other
+  consumables) now lands on Melinoe's own page instead of leaving the Codex
+  wherever it was. Reported by Caleb after playtesting 1.0.0: those rewards
+  worked as intended (there is genuinely no page for any of them), but he
+  wanted a landing spot rather than nothing happening. Vanilla's own default
+  page, not a value this mod invented.
 
 ## [1.0.0] - 2026-09-06
 

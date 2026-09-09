@@ -18,7 +18,10 @@
 --      vanilla resolves a nearby object's name (CodexLogic.lua:141-163). A
 --      Devotion door or a room.CageRewards door offers more than one candidate
 --      with nothing to disambiguate by proximity (RewardPresentation.lua:101-
---      125), so those set only the chapter and leave the entry alone.
+--      125), so those set only the chapter and leave the entry alone. A
+--      reward with no Codex entry at all (health, mana, darkness, nectar)
+--      lands on Melinoe's own page -- vanilla's own default (CodexData.lua:
+--      176-177), not a value this mod invented.
 --   2. CodexOpenChapter -- when hook one flagged a split, re-format the
 --      matching rows with screen.UnreadUnselectedFormat once the base call has
 --      built them (CodexLogic.lua:404-426), the same call vanilla itself uses
@@ -32,10 +35,8 @@
 -- vanilla itself writes, with values vanilla itself produces -- see the
 -- README's Compatibility section.
 --
--- Every game read/write below goes through the `game` table (== rom.game)
--- rather than a bare global: LuaENVY-ENVY isolates this plugin's own globals,
--- so a bare `CodexStatus` here would read this plugin's private table, not the
--- game's (MODDING_HADES2.md section 2).
+-- Every game read/write below goes through `game` (== rom.game), never a bare
+-- global -- LuaENVY-ENVY isolates this plugin's own globals (DESIGN.md).
 -- =============================================================================
 
 local mods = rom.mods
@@ -158,8 +159,9 @@ end
 -- Mirrors SelectNearbyUnlockedEntry's matching loop exactly (CodexLogic.lua:
 -- 149-163): find the chapter/entry pair named `name`, and only return it if at
 -- least one of its sub-entries is currently unlocked. A reward with no Codex
--- entry -- health, gold, other consumables -- simply matches nothing here,
--- which is correct and needs no special-casing (spec section 3.2).
+-- entry -- health, gold, mana, darkness, nectar, other consumables -- simply
+-- matches nothing here; the caller decides what a non-match means (below,
+-- that is Melinoe's own page).
 local function findCodexMatch(game, name)
     if name == nil then
         return nil, nil
@@ -215,11 +217,23 @@ local splitFlag = nil
 -- section 4), so the chapter needs no resolution -- it is always this one.
 local DEVOTION_CHAPTER = "OlympianGods"
 
+-- Vanilla's own default landing page (CodexData.lua:176-177,
+-- ScreenData.Codex.DefaultChapter / DefaultEntry) -- Melinoe's own entry, used
+-- unconditionally by CodexInit before anything has ever been selected. Reused
+-- here as the fallback for a door reward with no Codex entry of its own
+-- (health, gold, mana, darkness, nectar and other consumables -- Caleb's
+-- 2026-09-09 playtest), so standing near one still moves the Codex somewhere
+-- rather than leaving it wherever it happened to be. Safe by construction: it
+-- is not just a value vanilla would accept, it is the exact pair vanilla
+-- itself defaults to.
+local FALLBACK_CHAPTER = "ChthonicGods"
+local FALLBACK_ENTRY = "PlayerUnit"
+
 local function handleSingleReward(game, room)
     local name = room.ForceLootName or room.ChosenRewardType
     local chapterName, entryName = findCodexMatch(game, name)
     if chapterName == nil then
-        return
+        chapterName, entryName = FALLBACK_CHAPTER, FALLBACK_ENTRY
     end
     game.CodexStatus.SelectedChapterName = chapterName
     game.CodexStatus.SelectedEntryNames[chapterName] = entryName
@@ -235,8 +249,8 @@ end
 -- (InteractLogic.lua:1457-1462), unlike Devotion not guaranteed to be gods or
 -- guaranteed to share a chapter. Resolve every candidate, take the chapter of
 -- the first one that resolves, and mark whichever others land in that same
--- chapter. If none resolve, leave the Codex alone -- the same "no entry"
--- outcome a single unmatched reward gets.
+-- chapter. If none resolve, fall back the same way a single unmatched reward
+-- does -- Melinoe's own page, not a split, since there is nothing to mark.
 local function handleCageRewards(game, room)
     local chapter = nil
     local marked = {}
@@ -251,6 +265,8 @@ local function handleCageRewards(game, room)
         end
     end
     if chapter == nil then
+        game.CodexStatus.SelectedChapterName = FALLBACK_CHAPTER
+        game.CodexStatus.SelectedEntryNames[FALLBACK_CHAPTER] = FALLBACK_ENTRY
         return
     end
     game.CodexStatus.SelectedChapterName = chapter

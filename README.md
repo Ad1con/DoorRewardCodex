@@ -8,9 +8,8 @@ showing what waits in the next room. This mod closes that gap. Stand near a
 door showing a boon, open the Codex, and it opens on that god's page.
 
 Works on every door reward that has a Codex entry: any god boon and the
-Daedalus Hammer. Health, gold and other consumables have no Codex entry, so a
-door offering one of those leaves the Codex exactly where it was, the same as
-standing next to anything uncatalogued.
+Daedalus Hammer. A door offering health, mana, darkness, nectar or another
+consumable has no page to jump to, so it opens Melinoe's own page instead.
 
 A Trial of the Gods door, or any door offering more than one reward at once,
 switches to the right chapter but does not guess which of the two gods to
@@ -46,6 +45,17 @@ the reward stored on that door's room, resolving it to a Codex entry the same
 way vanilla resolves a nearby object's name.
 
 Full citations, file and line, are in the header comment of `src/main.lua`.
+
+## Health, mana, darkness and nectar (Why does the Codex just open on Melinoe?)
+
+The Codex has eight chapters: gods, enemies, weapons, familiars, biomes and a
+handful of named characters. There is no chapter for a resource. A door
+offering health, mana, darkness, nectar, gold or any other consumable has
+nothing for this mod to jump to, so it opens Melinoe's own page instead,
+the same page the Codex opens to by default before anything else has ever
+been selected. It does not describe the reward waiting behind the door; it is
+only a landing spot, so standing near one of these doors still moves the
+Codex somewhere rather than leaving it wherever it happened to be.
 
 ## Compatibility (Why does this write to my save?)
 
