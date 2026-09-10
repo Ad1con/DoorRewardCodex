@@ -7,34 +7,21 @@ version, so the square brackets are load-bearing -- the action looks for
 
 ## [Unreleased]
 
-### Changed
+Standing near an exit door's reward preview and opening the Codex lands on
+that reward's page, the same way it already works for nearby NPCs, enemies
+and items.
 
-- The settings section is now `General (applies immediately)`. Both keys are
-  read at the moment the Codex opens, so a change is live at once.
-- A door reward with no Codex entry (health, mana, darkness, nectar and other
-  consumables) now lands on Melinoe's own page instead of leaving the Codex
-  wherever it was. Reported by Caleb after playtesting 1.0.0: those rewards
-  worked as intended (there is genuinely no page for any of them), but he
-  wanted a landing spot rather than nothing happening. Vanilla's own default
-  page, not a value this mod invented.
-
-## [1.0.0] - 2026-09-06
-
-First public release.
-
-Standing near an exit door's reward preview and opening the Codex now lands on
-that reward's page, the same way it already works for nearby NPCs, enemies and
-items.
-
-- Works on every door reward that has a Codex entry: god boons and Daedalus
-  Hammers. Rewards with no Codex entry (health, gold, other consumables) are
-  left alone, the same as standing next to anything uncatalogued.
-- A Trial of the Gods door, or a cage door with more than one reward, opens the
-  right chapter and leaves the entry alone rather than guessing between two
-  candidates it cannot tell apart by distance. The two Trial gods are
+- Works on every door reward that has a Codex entry: any god boon, and the
+  Daedalus Hammer, which lands on whichever weapon is currently equipped.
+- A door offering health, mana, darkness, nectar or another consumable has no
+  Codex entry to jump to, so it opens Melinoe's own page instead of leaving
+  the Codex wherever it was.
+- A Trial of the Gods door, or a cage door with more than one reward, opens
+  the right chapter and leaves the entry alone rather than guessing between
+  candidates it cannot tell apart by distance. The gods involved are
   highlighted in the list once the chapter opens.
-- Never overrides a nearby object vanilla itself already found. Only acts once
-  the Codex has been opened at least once, exactly like vanilla's own
+- Never overrides a nearby object vanilla itself already found. Only acts
+  once the Codex has been opened at least once, exactly like vanilla's own
   auto-select.
 - Two settings, both also readable in the generated `.cfg`.
 - Wraps three vanilla functions and writes two `CodexStatus` fields already

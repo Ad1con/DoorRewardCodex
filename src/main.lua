@@ -51,8 +51,7 @@ local reload = mods["SGG_Modding-ReLoad"]
 
 local LOG_PREFIX = "[DoorRewardCodex] "
 
--- Vanilla's own search radius (CodexLogic.lua:130). Reused rather than
--- reinvented, per spec section 3.
+-- Vanilla's own search radius (CodexLogic.lua:130).
 local SEARCH_DISTANCE = 600
 
 -- =============================================================================
@@ -94,7 +93,7 @@ local CONFIG_DESCRIPTIONS = {
 }
 
 -- Bind with rom.config.config_file, not Chalk -- house style across this
--- author's mods. See MODDING_HADES2.md section 0.4.
+-- author's mods.
 local function loadSettings()
     local ok, err = pcall(function()
         if rom.config == nil or rom.config.config_file == nil then
@@ -114,7 +113,6 @@ local function loadSettings()
         for key, default in pairs(settings.values) do
             -- The label answers when a change starts mattering: both keys are
             -- read at the moment the Codex opens, so a change is live at once.
-            -- See MODDING_HADES2.md, "Say WHEN a setting takes effect".
             settings.entries[key] = file:bind("General (applies immediately)", key, default,
                                               CONFIG_DESCRIPTIONS[key] or "")
         end
@@ -186,9 +184,9 @@ end
 -- Finding the door
 -- =============================================================================
 
--- Walks MapState.OfferedExitDoors (RoomLogic.lua:319), a table keyed by object
--- id, rather than searching a group -- there is no group SelectNearbyUnlocked-
--- Entry's own GetClosest call reaches for door previews (spec section 2).
+-- Walks MapState.OfferedExitDoors (RoomLogic.lua:319), a table keyed by
+-- object id, rather than searching a group -- door previews are in no group
+-- SelectNearbyUnlockedEntry's own GetClosest call reaches.
 local function closestOfferedDoor(game)
     local heroId = game.CurrentRun.Hero.ObjectId
     local closestDoor, closestDistance = nil, nil
@@ -210,22 +208,18 @@ end
 -- nothing to disambiguate by proximity (a Devotion door, or room.CageRewards).
 -- Cleared when the Codex closes (see the CloseCodexScreen wrap below) so a
 -- later open never marks rows left over from a previous door. Kept on this
--- plugin's own local table, never on a game object -- spec section 4.1.
+-- plugin's own local table, never on a game object.
 local splitFlag = nil
 
--- Devotion always offers two Olympian boons (confirmed by Caleb; research
--- section 4), so the chapter needs no resolution -- it is always this one.
+-- Devotion always offers two Olympian boons -- confirmed against the game,
+-- not assumed -- so the chapter needs no resolution. See DESIGN.md.
 local DEVOTION_CHAPTER = "OlympianGods"
 
 -- Vanilla's own default landing page (CodexData.lua:176-177,
 -- ScreenData.Codex.DefaultChapter / DefaultEntry) -- Melinoe's own entry, used
--- unconditionally by CodexInit before anything has ever been selected. Reused
--- here as the fallback for a door reward with no Codex entry of its own
--- (health, gold, mana, darkness, nectar and other consumables -- Caleb's
--- 2026-09-09 playtest), so standing near one still moves the Codex somewhere
--- rather than leaving it wherever it happened to be. Safe by construction: it
--- is not just a value vanilla would accept, it is the exact pair vanilla
--- itself defaults to.
+-- unconditionally by CodexInit before anything has ever been selected. Used as
+-- the fallback for a door reward with no Codex entry of its own (health, gold,
+-- mana, darkness, nectar and other consumables). See DESIGN.md.
 local FALLBACK_CHAPTER = "ChthonicGods"
 local FALLBACK_ENTRY = "PlayerUnit"
 
@@ -247,10 +241,10 @@ end
 
 -- room.CageRewards is a list of { RewardType, ForceLootName } entries
 -- (InteractLogic.lua:1457-1462), unlike Devotion not guaranteed to be gods or
--- guaranteed to share a chapter. Resolve every candidate, take the chapter of
--- the first one that resolves, and mark whichever others land in that same
--- chapter. If none resolve, fall back the same way a single unmatched reward
--- does -- Melinoe's own page, not a split, since there is nothing to mark.
+-- to share a chapter. Resolve every candidate, take the chapter of the first
+-- one that resolves, and mark whichever others land in that same chapter.
+-- Falls back to Melinoe's page if none resolve. See DESIGN.md for the policy
+-- behind "first that resolves."
 local function handleCageRewards(game, room)
     local chapter = nil
     local marked = {}
@@ -303,11 +297,10 @@ local function installHooks(game)
     end
 
     -- Let vanilla run first. If it selected something, its answer wins and
-    -- this mod does nothing -- the player is standing next to an actual object,
-    -- which is more specific than a door across the room (spec section 3).
-    -- Snapshot-and-compare rather than reimplementing vanilla's own search, so
-    -- this mod can only ever disagree with vanilla by doing less, never by
-    -- predicting it wrong (spec section 3.1).
+    -- this mod does nothing -- the player is standing next to an actual
+    -- object, which is more specific than a door across the room. Snapshot-
+    -- and-compare rather than reimplementing vanilla's own search; see
+    -- DESIGN.md for the one edge case that trade-off accepts.
     ModUtil.Path.Wrap("SelectNearbyUnlockedEntry", function(base)
         if not settings.values.Enabled then
             return base()
@@ -365,7 +358,7 @@ local function installHooks(game)
     end)
 
     -- Clears the flag so a later open never marks rows left over from a door
-    -- the player is no longer standing near (spec section 4.1).
+    -- the player is no longer standing near.
     ModUtil.Path.Wrap("CloseCodexScreen", function(base, screen, button)
         base(screen, button)
         splitFlag = nil

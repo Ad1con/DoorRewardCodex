@@ -2,9 +2,10 @@
 
 Repo-only. Not shipped (`thunderstore.toml` copies only `CHANGELOG.md`,
 `LICENSE` and `src`). This is where the *why* behind `src/main.lua` lives, so
-the shipped file's header comment can stay short. See
-`DOOR_REWARD_CODEX_SPEC.md` and `DOOR_REWARD_CODEX_RESEARCH.md` for the
-citations this was built against; verified 2026-09-06.
+the shipped file's header comment can stay short. See `DOOR_REWARD_CODEX_SPEC.md`
+and `DOOR_REWARD_CODEX_RESEARCH.md` for the citations the initial build was
+made against (2026-09-06); later entries below record what changed after
+playtesting started.
 
 ## Why every game read goes through `game.*`, never a bare global
 
@@ -113,6 +114,22 @@ Applies to both the single-reward path and the `CageRewards` path when
 nothing in the list resolves. Devotion is unaffected -- it always resolves
 (confirmed always Olympians), so there is no "nothing matched" case for it to
 fall into.
+
+## The Hammer already lands on whatever weapon is currently equipped
+
+Caleb asked for confirmation that a Hammer door should land on "the
+weapon/aspect currently being used in that run," rather than change anything.
+Checked rather than assumed: `EquipPlayerWeapon` (`CombatLogic.lua:4711-4769`)
+sets only the newly-equipped weapon's name true in `CurrentRun.Hero.Weapons`
+(plus that weapon's own `SecondaryWeapon` alias) and explicitly nils every
+other name in `WeaponSets.HeroPrimaryWeapons` -- the same six weapon names
+`CodexData`'s Weapons chapter uses (`WeaponSets.lua:40-48`). So
+`CurrentRun.Hero.Weapons` never holds more than the one currently-equipped
+weapon, and `resolveWeaponUpgradeName`'s loop over it -- vanilla's own code,
+copied verbatim from `CodexLogic.lua:141-148` -- already resolves to that
+weapon. Aspects are a separate concept (tracked elsewhere, not a different
+weapon name), so they do not factor in; the Codex's Weapons chapter is
+per-weapon, not per-aspect, regardless. No code changed here.
 
 ## No ImGui overlay panel
 
