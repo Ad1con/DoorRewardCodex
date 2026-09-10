@@ -7,9 +7,10 @@ on that thing's page. Vanilla's one exception is the icons on an exit door
 showing what waits in the next room. This mod closes that gap. Stand near a
 door showing a boon, open the Codex, and it opens on that god's page.
 
-Works on every door reward that has a Codex entry: any god boon and the
-Daedalus Hammer. A door offering health, mana, darkness, nectar or another
-consumable has no page to jump to, so it opens Melinoe's own page instead.
+Works on every door reward that has a Codex entry: any god boon, and the
+Daedalus Hammer, which lands on whichever weapon you are currently using. A
+door offering health, mana, darkness, nectar or another consumable has no
+page to jump to, so it opens Melinoe's own page instead.
 
 A Trial of the Gods door, or any door offering more than one reward at once,
 switches to the right chapter but does not guess which of the two gods to
