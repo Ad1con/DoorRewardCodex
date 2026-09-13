@@ -233,6 +233,8 @@ do
     end
   end
   check("6.7 and no other row anywhere was marked", strayMarks == 0, tostring(strayMarks))
+  check("6.8 the split is logged, so it can be confirmed without spotting the color",
+        logsContain("split door (Devotion): chapter=OlympianGods, gods=ZeusUpgrade/AphroditeUpgrade"))
 end
 
 -- =============================================================================
@@ -255,6 +257,7 @@ do
   check("7.2 the entry is NOT set, exactly like a Devotion door",
         G.CodexStatus.SelectedEntryNames.OlympianGods == nil,
         tostring(G.CodexStatus.SelectedEntryNames.OlympianGods))
+  check("7.3 the split is logged too", logsContain("split door (CageRewards): chapter=OlympianGods"))
 end
 
 -- =============================================================================
