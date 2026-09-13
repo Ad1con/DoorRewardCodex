@@ -1,6 +1,6 @@
 # DoorRewardCodex
 
-**Opens the Codex on an exit door's reward, not just on nearby NPCs and items.**
+**Opens the Codex to the right page on door rewards just like nearby items and NPCs.**
 
 Standing near a character, enemy or item and opening the Codex already lands
 on that thing's page. Vanilla's one exception is the icons on an exit door
@@ -47,16 +47,12 @@ way vanilla resolves a nearby object's name.
 
 Full citations, file and line, are in the header comment of `src/main.lua`.
 
-## Health, mana, darkness and nectar (Why does the Codex just open on Melinoe?)
+## Minor rewards
 
-The Codex has eight chapters: gods, enemies, weapons, familiars, biomes and a
-handful of named characters. There is no chapter for a resource. A door
-offering health, mana, darkness, nectar, gold or any other consumable has
-nothing for this mod to jump to, so it opens Melinoe's own page instead,
-the same page the Codex opens to by default before anything else has ever
-been selected. It does not describe the reward waiting behind the door; it is
-only a landing spot, so standing near one of these doors still moves the
-Codex somewhere rather than leaving it wherever it happened to be.
+There is no chapter for resources. A door
+offering of health, mana, darkness, nectar, gold or any other consumable has
+nothing for this mod to jump to, so it opens Melinoe's own page instead.
+
 
 ## Compatibility (Why does this write to my save?)
 
@@ -71,6 +67,11 @@ opening on a different page once.
 Modifies no game files. It reads `CodexData` and the doors offered in the
 current room, and wraps three vanilla functions (`SelectNearbyUnlockedEntry`,
 `CodexOpenChapter`, `CloseCodexScreen`).
+
+Does not touch your run's seed. This mod never calls a random-number
+function; it only reads what a door and the Codex already have and writes
+the two fields above, so it draws nothing from the seeded stream and changes
+no later reward roll.
 
 ## Credits
 
