@@ -237,6 +237,8 @@ local function handleDevotionReward(game, room)
     local encounter = room.Encounter or {}
     game.CodexStatus.SelectedChapterName = DEVOTION_CHAPTER
     splitFlag = { chapter = DEVOTION_CHAPTER, names = { encounter.LootAName, encounter.LootBName } }
+    logAlways(("split door (Devotion): chapter=%s, gods=%s/%s")
+        :format(DEVOTION_CHAPTER, tostring(encounter.LootAName), tostring(encounter.LootBName)))
 end
 
 -- room.CageRewards is a list of { RewardType, ForceLootName } entries
@@ -265,6 +267,8 @@ local function handleCageRewards(game, room)
     end
     game.CodexStatus.SelectedChapterName = chapter
     splitFlag = { chapter = chapter, names = marked }
+    logAlways(("split door (CageRewards): chapter=%s, entries=%s")
+        :format(chapter, table.concat(marked, ",")))
 end
 
 local function handleDoorRewards(game)
