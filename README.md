@@ -74,6 +74,8 @@ function; it only reads what a door and the Codex already have and writes
 the two fields above, so it draws nothing from the seeded stream and changes
 no later reward roll.
 
+**[Hades2BlindAccessibility](https://github.com/Lirin111/Hades2BlindAccessibility) by Lirin111** reads the same door and steering-wheel tables this mod reads, and neither writes to them. It binds the Codex key only while the boon-info screen is open, where it opens its own menu; pressing Codex out in the room opens the game's Codex as usual, which is when this mod acts. The two never run at the same moment.
+
 ## Credits
 
 Hades II is by [Supergiant Games](https://www.supergiantgames.com/). This is
