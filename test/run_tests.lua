@@ -481,6 +481,57 @@ do
 end
 
 -- =============================================================================
+-- 16. The Rift of Thessaly: rewards on steering wheels, not doors
+-- =============================================================================
+-- Reported 2026-09-16: standing by the wheel's left choice, the Codex stayed
+-- on whatever it last showed. The ship encounter keeps its choices in
+-- MapState.ShipWheels with the reward on the wheel itself (RoomLogic.lua:
+-- 1387-1431); nothing walked that table.
+do
+  local G = boot()
+  G.unlockEntry("AphroditeUpgrade")
+  G.addWheel("Boon", "AphroditeUpgrade", 300)
+
+  G.SelectNearbyUnlockedEntry()
+
+  check("16.1 a wheel's boon switches the chapter",
+        G.CodexStatus.SelectedChapterName == "OlympianGods",
+        tostring(G.CodexStatus.SelectedChapterName))
+  check("16.2 and the entry is that god",
+        G.CodexStatus.SelectedEntryNames.OlympianGods == "AphroditeUpgrade",
+        tostring(G.CodexStatus.SelectedEntryNames.OlympianGods))
+end
+
+do
+  -- Two wheels, the ordinary Thessaly case: the closer one decides.
+  local G = boot()
+  G.unlockEntry("AphroditeUpgrade")
+  G.unlockEntry("ZeusUpgrade")
+  G.addWheel("Boon", "AphroditeUpgrade", 500)
+  G.addWheel("Boon", "ZeusUpgrade", 200)
+
+  G.SelectNearbyUnlockedEntry()
+
+  check("16.3 with two wheels the closer one decides",
+        G.CodexStatus.SelectedEntryNames.OlympianGods == "ZeusUpgrade",
+        tostring(G.CodexStatus.SelectedEntryNames.OlympianGods))
+end
+
+do
+  -- A wheel out of range is ignored like a door out of range.
+  local G = boot()
+  local before = G.CodexStatus.SelectedChapterName
+  G.unlockEntry("AphroditeUpgrade")
+  G.addWheel("Boon", "AphroditeUpgrade", 900)
+
+  G.SelectNearbyUnlockedEntry()
+
+  check("16.4 a wheel out of range changes nothing",
+        G.CodexStatus.SelectedChapterName == before,
+        tostring(G.CodexStatus.SelectedChapterName))
+end
+
+-- =============================================================================
 -- 15. Packaging -- the files that ship
 -- =============================================================================
 local function readFile(path)

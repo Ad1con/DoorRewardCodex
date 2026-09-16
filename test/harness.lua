@@ -23,7 +23,7 @@ end
 G.CurrentRun = { Hero = { ObjectId = nextId(), Weapons = {} } }
 G.GameState = { ScreensViewed = { Codex = true }, CodexEntriesViewed = {} }
 G.SessionState = { CodexDebugUnlocked = false }
-G.MapState = { OfferedExitDoors = {} }
+G.MapState = { OfferedExitDoors = {}, ShipWheels = {} }
 G.ActiveEnemies = {}
 
 -- Real chapter/entry shapes, copied from CodexData.lua so the matching loop
@@ -426,6 +426,18 @@ function G.addDoor(room, distanceFromHero)
     G.distances[G.CurrentRun.Hero.ObjectId] = G.distances[G.CurrentRun.Hero.ObjectId] or {}
     G.distances[G.CurrentRun.Hero.ObjectId][door.ObjectId] = distanceFromHero
     return door
+end
+
+-- Registers a Thessaly steering wheel in MapState.ShipWheels the way the ship
+-- encounter does (RoomLogic.lua:1387-1431): the reward is on the wheel, and
+-- its Room is the current room, not the destination.
+function G.addWheel(chosenRewardType, forceLootName, distanceFromHero)
+    local wheel = { ObjectId = nextId(), Room = G.CurrentRun.CurrentRoom,
+                    ChosenRewardType = chosenRewardType, ForceLootName = forceLootName }
+    G.MapState.ShipWheels[wheel.ObjectId] = wheel
+    G.distances[G.CurrentRun.Hero.ObjectId] = G.distances[G.CurrentRun.Hero.ObjectId] or {}
+    G.distances[G.CurrentRun.Hero.ObjectId][wheel.ObjectId] = distanceFromHero
+    return wheel
 end
 
 return G
