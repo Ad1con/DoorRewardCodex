@@ -14,9 +14,9 @@ door offering health, mana, darkness, nectar or another consumable has no
 page to jump to, so it opens Melinoe's own page instead.
 
 A Trial of the Gods door, or any door offering more than one reward at once,
-switches to the right chapter but does not guess which of the two gods to
-open, since the two icons sit too close together to tell apart by distance.
-Both gods are highlighted in the list once the chapter opens instead.
+opens on the first of the two gods and marks the other one's name in the
+list in gold, so both are one glance away. The two icons sit too close
+together to tell which you are nearer.
 
 ## Settings
 

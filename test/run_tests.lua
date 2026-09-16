@@ -47,6 +47,10 @@ end
 -- config store starts empty, so every key binds to the plugin's own default.
 -- Tests that need a non-default value pass it in `initial` and thereby state
 -- what they depend on, rather than inheriting it.
+-- The mod's own row format for the other god of a split (main.lua,
+-- SPLIT_ROW_FORMAT): gold with a gold halo, not vanilla's parchment unread.
+local SPLIT_ROW_COLOR = { 255, 214, 96, 255 }
+
 local function boot(initial, opts)
   opts = opts or {}
   local G = dofile(HARNESS)
@@ -171,7 +175,7 @@ do
 end
 
 -- =============================================================================
--- 5. A Devotion door -- chapter only (case 4)
+-- 5. A Devotion door -- opens on the first god (case 4)
 -- =============================================================================
 do
   local G = boot()
@@ -184,15 +188,15 @@ do
   check("5.1 the chapter switches to OlympianGods",
         G.CodexStatus.SelectedChapterName == "OlympianGods",
         tostring(G.CodexStatus.SelectedChapterName))
-  check("5.2 the entry is NOT set for OlympianGods",
-        G.CodexStatus.SelectedEntryNames.OlympianGods == nil,
+  check("5.2 and opens on the first god rather than whoever was last read",
+        G.CodexStatus.SelectedEntryNames.OlympianGods == "ZeusUpgrade",
         tostring(G.CodexStatus.SelectedEntryNames.OlympianGods))
   check("5.3 the previous chapter's entry survives untouched",
         G.CodexStatus.SelectedEntryNames.ChthonicGods == "NPC_Hecate_01")
 end
 
 -- =============================================================================
--- 6. A Devotion door -- both rows re-formatted, no others (case 5)
+-- 6. A Devotion door -- the other god's row is marked, no others (case 5)
 -- =============================================================================
 do
   local G = boot()
@@ -206,7 +210,7 @@ do
   local screen = G.newCodexScreen()
   G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
 
-  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
+  local unreadColor = SPLIT_ROW_COLOR
   local zeus = screen.Components.ZeusUpgrade
   local aphrodite = screen.Components.AphroditeUpgrade
   local hermes = screen.Components.HermesUpgrade
@@ -215,9 +219,10 @@ do
   check("6.2 Aphrodite's row exists", aphrodite ~= nil)
   check("6.3 Hermes's row exists", hermes ~= nil)
 
-  check("6.4 Zeus's row carries the unread-unselected color",
-        sameColor(at(lastModificationFor(G, at(zeus, "Id")), "Color"), unreadColor))
-  check("6.5 Aphrodite's row carries the unread-unselected color",
+  local zeusLast = lastModificationFor(G, at(zeus, "Id"))
+  check("6.4 Zeus's row is the opened entry, not marked as the other god",
+        zeusLast == nil or not sameColor(zeusLast.Color, unreadColor))
+  check("6.5 Aphrodite's row carries the split color",
         sameColor(at(lastModificationFor(G, at(aphrodite, "Id")), "Color"), unreadColor))
 
   local hermesLast = lastModificationFor(G, at(hermes, "Id"))
@@ -225,7 +230,7 @@ do
         hermesLast == nil or not sameColor(hermesLast.Color, unreadColor))
 
   -- No component outside the two named entries was ever given that color.
-  local markedIds = { [at(zeus, "Id")] = true, [at(aphrodite, "Id")] = true }
+  local markedIds = { [at(aphrodite, "Id")] = true }
   local strayMarks = 0
   for _, call in ipairs(G.textBoxModifications) do
     if sameColor(call.Color, unreadColor) and not markedIds[call.Id] then
@@ -254,8 +259,8 @@ do
   check("7.1 the chapter switches to OlympianGods",
         G.CodexStatus.SelectedChapterName == "OlympianGods",
         tostring(G.CodexStatus.SelectedChapterName))
-  check("7.2 the entry is NOT set, exactly like a Devotion door",
-        G.CodexStatus.SelectedEntryNames.OlympianGods == nil,
+  check("7.2 and opens on the first reward that resolves, like a Devotion door",
+        G.CodexStatus.SelectedEntryNames.OlympianGods == "AphroditeUpgrade",
         tostring(G.CodexStatus.SelectedEntryNames.OlympianGods))
   check("7.3 the split is logged too", logsContain("split door (CageRewards): chapter=OlympianGods"))
 end
@@ -371,7 +376,7 @@ do
   G.SelectNearbyUnlockedEntry()
   local screen = G.newCodexScreen()
   G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
-  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
+  local unreadColor = SPLIT_ROW_COLOR
   local marked = 0
   for _, call in ipairs(G.textBoxModifications) do
     if sameColor(call.Color, unreadColor) then marked = marked + 1 end
@@ -395,7 +400,7 @@ do
   local screen = G.newCodexScreen()
   G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
 
-  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
+  local unreadColor = SPLIT_ROW_COLOR
   local marked = 0
   for _, call in ipairs(G.textBoxModifications) do
     if sameColor(call.Color, unreadColor) then marked = marked + 1 end
@@ -415,10 +420,10 @@ do
 
   local screen = G.newCodexScreen()
   G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
-  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
-  local zeusId = screen.Components.ZeusUpgrade.Id
+  local unreadColor = SPLIT_ROW_COLOR
+  local aphroditeId = screen.Components.AphroditeUpgrade.Id
   check("13.1 sanity: the row was marked before closing",
-        sameColor(at(lastModificationFor(G, zeusId), "Color"), unreadColor))
+        sameColor(at(lastModificationFor(G, aphroditeId), "Color"), unreadColor))
 
   G.CloseCodexScreen(screen, nil)
 
@@ -553,12 +558,12 @@ do
 
   local screen = G.newCodexScreen()
   G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
-  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
+  local unreadColor = SPLIT_ROW_COLOR
   local zeus = screen.Components.ZeusUpgrade
   local aphrodite = screen.Components.AphroditeUpgrade
   local hermes = screen.Components.HermesUpgrade
-  check("17.2 both gods' rows are marked",
-        sameColor(at(lastModificationFor(G, at(zeus, "Id")), "Color"), unreadColor)
+  check("17.2 it opens on the first god and marks the other",
+        G.CodexStatus.SelectedEntryNames.OlympianGods == "ZeusUpgrade"
           and sameColor(at(lastModificationFor(G, at(aphrodite, "Id")), "Color"), unreadColor))
   local hermesLast = lastModificationFor(G, at(hermes, "Id"))
   check("17.3 and a third god's is not",

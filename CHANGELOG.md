@@ -19,9 +19,8 @@ and items.
   Codex entry to jump to, so it opens Melinoe's own page instead of leaving
   the Codex wherever it was.
 - A Trial of the Gods door, or a cage door with more than one reward, opens
-  the right chapter and leaves the entry alone rather than guessing between
-  candidates it cannot tell apart by distance. The gods involved are
-  highlighted in the list once the chapter opens.
+  on the first god and marks the other one's name in the list in gold, since
+  the two icons cannot be told apart by distance.
 - Never overrides a nearby object vanilla itself already found. Only acts
   once the Codex has been opened at least once, exactly like vanilla's own
   auto-select.
