@@ -289,12 +289,21 @@ local function handleDoorRewards(game)
 
     game.CodexStatus.SelectedEntryNames = game.CodexStatus.SelectedEntryNames or {}
 
-    -- A wheel carries its own reward; hand it to the single-reward path as
-    -- the "room" it reads. Devotion and cage doors never come on a wheel:
-    -- ChooseRoomReward is called per wheel with the ordinary reward store.
+    -- A wheel carries its own reward. A Trial of the Gods on a wheel keeps
+    -- its two gods where SetupRoomReward wrote them (RewardLogic.lua:267-273):
+    -- on the Encounter of the room it was handed, which for a wheel is the
+    -- CURRENT room -- wheel.Room -- so the Devotion path reads the same
+    -- fields it reads for a door. Reported 2026-09-16: a two-god wheel landed
+    -- on Melinoe's page because it went down the single-reward path.
+    -- Anything else on a wheel is a single reward; hand it over as the "room"
+    -- that path reads. Cage rewards never come on a wheel.
     if isWheel then
-        handleSingleReward(game, { ForceLootName = door.ForceLootName,
-                                   ChosenRewardType = door.ChosenRewardType })
+        if door.ChosenRewardType == "Devotion" and door.Room ~= nil then
+            handleDevotionReward(game, door.Room)
+        else
+            handleSingleReward(game, { ForceLootName = door.ForceLootName,
+                                       ChosenRewardType = door.ChosenRewardType })
+        end
         return
     end
 

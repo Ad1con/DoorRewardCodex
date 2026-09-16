@@ -532,6 +532,40 @@ do
 end
 
 -- =============================================================================
+-- 17. A Trial of the Gods on a steering wheel
+-- =============================================================================
+-- Reported 2026-09-16: the two-god wheel landed on Melinoe's page. Its gods
+-- live on the current room's Encounter (RewardLogic.lua:267-273), which is
+-- what the wheel's Room is, so it takes the same Devotion path as a door.
+do
+  local G = boot()
+  G.unlockEntry("ZeusUpgrade")
+  G.unlockEntry("AphroditeUpgrade")
+  G.unlockEntry("HermesUpgrade")
+  G.CurrentRun.CurrentRoom = { Encounter = { LootAName = "ZeusUpgrade", LootBName = "AphroditeUpgrade" } }
+  G.addWheel("Devotion", nil, 200)
+
+  G.SelectNearbyUnlockedEntry()
+
+  check("17.1 the chapter is the Olympians, not Melinoe's page",
+        G.CodexStatus.SelectedChapterName == "OlympianGods",
+        tostring(G.CodexStatus.SelectedChapterName))
+
+  local screen = G.newCodexScreen()
+  G.CodexOpenChapter(screen, G.chapterButton("OlympianGods"), { FirstOpen = true })
+  local unreadColor = G.ScreenData.Codex.UnreadUnselectedFormat.Color
+  local zeus = screen.Components.ZeusUpgrade
+  local aphrodite = screen.Components.AphroditeUpgrade
+  local hermes = screen.Components.HermesUpgrade
+  check("17.2 both gods' rows are marked",
+        sameColor(at(lastModificationFor(G, at(zeus, "Id")), "Color"), unreadColor)
+          and sameColor(at(lastModificationFor(G, at(aphrodite, "Id")), "Color"), unreadColor))
+  local hermesLast = lastModificationFor(G, at(hermes, "Id"))
+  check("17.3 and a third god's is not",
+        hermesLast == nil or not sameColor(hermesLast.Color, unreadColor))
+end
+
+-- =============================================================================
 -- 15. Packaging -- the files that ship
 -- =============================================================================
 local function readFile(path)
