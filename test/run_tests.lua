@@ -571,6 +571,43 @@ do
 end
 
 -- =============================================================================
+-- 18. Selene's later doors: TalentDrop and TalentBigDrop reach her page
+-- =============================================================================
+-- Log, 2026-09-16: "door reward TalentBigDrop (type TalentBigDrop): no
+-- unlocked Codex entry, opening Melinoe's page", three times, at a Selene
+-- door. Her entry is SpellDrop; the door names the pickup. ConsumableData
+-- carries the bridge vanilla uses for a drop on the ground.
+do
+  local G = boot()
+  G.unlockEntry("SpellDrop")
+  G.addDoor({ ChosenRewardType = "TalentBigDrop" }, 200)
+  G.SelectNearbyUnlockedEntry()
+  check("18.1 a TalentBigDrop door opens Selene's chapter",
+        G.CodexStatus.SelectedChapterName == "ChthonicGods",
+        tostring(G.CodexStatus.SelectedChapterName))
+  check("18.2 on her entry",
+        G.CodexStatus.SelectedEntryNames.ChthonicGods == "SpellDrop",
+        tostring(G.CodexStatus.SelectedEntryNames.ChthonicGods))
+
+  local G2 = boot()
+  G2.unlockEntry("SpellDrop")
+  G2.addDoor({ ChosenRewardType = "TalentDrop" }, 200)
+  G2.SelectNearbyUnlockedEntry()
+  check("18.3 and so does a TalentDrop door",
+        G2.CodexStatus.SelectedEntryNames.ChthonicGods == "SpellDrop",
+        tostring(G2.CodexStatus.SelectedEntryNames.ChthonicGods))
+
+  -- Her first door still names her directly.
+  local G3 = boot()
+  G3.unlockEntry("SpellDrop")
+  G3.addDoor({ ChosenRewardType = "SpellDrop" }, 200)
+  G3.SelectNearbyUnlockedEntry()
+  check("18.4 and her first door, named SpellDrop outright",
+        G3.CodexStatus.SelectedEntryNames.ChthonicGods == "SpellDrop",
+        tostring(G3.CodexStatus.SelectedEntryNames.ChthonicGods))
+end
+
+-- =============================================================================
 -- 15. Packaging -- the files that ship
 -- =============================================================================
 local function readFile(path)
