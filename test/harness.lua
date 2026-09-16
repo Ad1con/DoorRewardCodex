@@ -41,6 +41,15 @@ G.CodexData = {
                 },
                 Image = "Codex_Portrait_Hecate",
             },
+            -- CodexData.lua:585-599. Selene's entry is named after her FIRST
+            -- reward type; her later doors say TalentDrop / TalentBigDrop.
+            SpellDrop = {
+                Entries = {
+                    { UnlockGameStateRequirements = { { PathTrue = { "GameState", "TextLinesRecord", "SeleneGift01" } } },
+                      Text = "CodexData_Selene_01" },
+                },
+                Image = "Codex_Portrait_Selene",
+            },
         },
     },
     OlympianGods = {
@@ -104,12 +113,21 @@ G.CodexData = {
 -- CodexOrdering.lua:1-6 (chapter list trimmed to the chapters this suite
 -- uses). Order within a chapter matches CodexData.lua:11-13, 23-26.
 G.CodexOrdering = {
-    ChthonicGods = { "NPC_Hecate_01" },
+    ChthonicGods = { "NPC_Hecate_01", "SpellDrop" },
     OlympianGods = { "ZeusUpgrade", "AphroditeUpgrade", "HermesUpgrade" },
     Weapons = { "WeaponDagger", "WeaponAxe" },
 }
 
 G.CodexStatus = { SelectedChapterName = "ChthonicGods", SelectedEntryNames = { ChthonicGods = "NPC_Hecate_01" } }
+
+-- ConsumableData.lua:686-780. A Path of Stars pickup carries Selene's Codex
+-- name as its GenusName, which is how vanilla's nearby-select reaches her page
+-- from a drop on the ground. TalentBigDrop inherits it from TalentDrop; the
+-- game resolves InheritFrom at load, so the field is on both at runtime.
+G.ConsumableData = {
+    TalentDrop = { GenusName = "SpellDrop", DoorIcon = "TalentDropPreview" },
+    TalentBigDrop = { GenusName = "SpellDrop", DoorIcon = "TalentDropPreview", AddTalentPoints = 5 },
+}
 
 -- ----------------------------------------------------------- eligibility ----
 

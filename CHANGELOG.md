@@ -13,6 +13,7 @@ and items.
 
 - Works on every door reward that has a Codex entry: any god boon, and the
   Daedalus Hammer, which lands on whichever weapon is currently equipped.
+  Selene's later doors, the Path of Stars pickups, land on her page too.
 - Works on the Rift of Thessaly's steering wheel too, where the choices are
   on the wheel rather than on doors, a Trial of the Gods included.
 - A door offering health, mana, darkness, nectar or another consumable has no

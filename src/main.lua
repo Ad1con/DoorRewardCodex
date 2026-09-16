@@ -160,11 +160,34 @@ end
 -- entry -- health, gold, mana, darkness, nectar, other consumables -- simply
 -- matches nothing here; the caller decides what a non-match means (below,
 -- that is Melinoe's own page).
+-- A door can name a reward by a name the Codex does not use. Selene's later
+-- doors say TalentDrop or TalentBigDrop (a Path of Stars pickup), and her
+-- Codex entry is SpellDrop. Vanilla bridges that for a pickup on the ground
+-- through the object's GenusName (CodexLogic.lua:135: ConsumableData.
+-- TalentDrop.GenusName = "SpellDrop"), which a door preview never has. So
+-- the same field is read off the data tables here. Found 2026-09-16: every
+-- Selene door after the first opened Melinoe's page.
+local function genusNameFor(game, name)
+    for _, tableName in ipairs({ "ConsumableData", "LootData" }) do
+        local data = game[tableName]
+        local entry = type(data) == "table" and data[name] or nil
+        if type(entry) == "table" and type(entry.GenusName) == "string" then
+            return entry.GenusName
+        end
+    end
+    return nil
+end
+
 local function findCodexMatch(game, name)
     if name == nil then
         return nil, nil
     end
     name = resolveWeaponUpgradeName(game, name)
+    local genus = genusNameFor(game, name)
+    if genus ~= nil and genus ~= name then
+        local chapterName, entryName = findCodexMatch(game, genus)
+        if chapterName ~= nil then return chapterName, entryName end
+    end
     for chapterName, chapterData in pairs(game.CodexData) do
         for entryName, entryData in pairs(chapterData.Entries) do
             if entryName == name then
