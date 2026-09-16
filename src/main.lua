@@ -251,8 +251,15 @@ local SPLIT_ROW_FORMAT = {
 local function handleSingleReward(game, room)
     local name = room.ForceLootName or room.ChosenRewardType
     local chapterName, entryName = findCodexMatch(game, name)
+    -- One line per resolution, so "it opened on the wrong page" can be read
+    -- off the log: what the door said, and what the Codex had for it.
     if chapterName == nil then
+        logAlways(("door reward %s (type %s): no unlocked Codex entry, opening Melinoe's page")
+            :format(tostring(name), tostring(room.ChosenRewardType)))
         chapterName, entryName = FALLBACK_CHAPTER, FALLBACK_ENTRY
+    else
+        logAlways(("door reward %s (type %s): opening %s / %s")
+            :format(tostring(name), tostring(room.ChosenRewardType), chapterName, entryName))
     end
     game.CodexStatus.SelectedChapterName = chapterName
     game.CodexStatus.SelectedEntryNames[chapterName] = entryName
@@ -313,6 +320,7 @@ end
 local function handleDoorRewards(game)
     local door, isWheel = closestOfferedDoor(game)
     if door == nil then
+        logAlways("no door or wheel within " .. SEARCH_DISTANCE .. "; leaving the Codex as it was")
         return
     end
 
@@ -379,6 +387,10 @@ local function installHooks(game)
         local vanillaChangedSomething = game.CodexStatus.SelectedChapterName ~= prevChapter
             or (game.CodexStatus.SelectedEntryNames and game.CodexStatus.SelectedEntryNames[prevChapter]) ~= prevEntry
         if vanillaChangedSomething then
+            logAlways(("vanilla found something nearby and opened %s / %s; standing down")
+                :format(tostring(game.CodexStatus.SelectedChapterName),
+                        tostring(game.CodexStatus.SelectedEntryNames
+                            and game.CodexStatus.SelectedEntryNames[game.CodexStatus.SelectedChapterName])))
             return
         end
 
