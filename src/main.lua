@@ -18,14 +18,14 @@
 --      vanilla resolves a nearby object's name (CodexLogic.lua:141-163). A
 --      Devotion door or a room.CageRewards door offers more than one candidate
 --      with nothing to disambiguate by proximity (RewardPresentation.lua:101-
---      125), so those set only the chapter and leave the entry alone. A
+--      125), so those open on the first and mark the rest (hook two). A
 --      reward with no Codex entry at all (health, mana, darkness, nectar)
 --      lands on Melinoe's own page -- vanilla's own default (CodexData.lua:
 --      176-177), not a value this mod invented.
 --   2. CodexOpenChapter -- when hook one flagged a split, re-format the
---      matching rows with screen.UnreadUnselectedFormat once the base call has
---      built them (CodexLogic.lua:404-426), the same call vanilla itself uses
---      to flag an unread row. No marker object: UnreadStarId is dead code,
+--      matching rows with SPLIT_ROW_FORMAT once the base call has built them
+--      (CodexLogic.lua:404-426), through the same ModifyTextBox call vanilla
+--      itself uses to flag an unread row. No marker object: UnreadStarId is dead code,
 --      never assigned and its config commented out (CodexData.lua:92).
 --
 -- CloseCodexScreen clears the split flag so a later open never marks stale
@@ -233,6 +233,21 @@ local DEVOTION_CHAPTER = "OlympianGods"
 local FALLBACK_CHAPTER = "ChthonicGods"
 local FALLBACK_ENTRY = "PlayerUnit"
 
+-- The row format for the other god of a split. Vanilla's unread format is a
+-- parchment color with a dark drop shadow, easy to miss beside the selected
+-- row's green. This is a gold with the shadow turned into a soft gold halo
+-- (blur up, offsets zero, shadow the same hue): the same ModifyTextBox
+-- fields vanilla's own formats use, nothing the text box does not already
+-- support. See CodexData.lua:128-162 for the three formats it sits beside.
+local SPLIT_ROW_FORMAT = {
+    Color = { 255, 214, 96, 255 },
+    DataProperties = {
+        ShadowBlur = 8,
+        ShadowRed = 255, ShadowGreen = 190, ShadowBlue = 60, ShadowAlpha = 1,
+        ShadowOffsetX = 0, ShadowOffsetY = 0,
+    },
+}
+
 local function handleSingleReward(game, room)
     local name = room.ForceLootName or room.ChosenRewardType
     local chapterName, entryName = findCodexMatch(game, name)
@@ -243,12 +258,25 @@ local function handleSingleReward(game, room)
     game.CodexStatus.SelectedEntryNames[chapterName] = entryName
 end
 
+-- Lands on the first god's page and marks the second god's row, so the
+-- Codex opens on something rather than on whichever Olympian was last read
+-- (the earlier build set only the chapter, and the game then showed its
+-- last selection). "First" is LootAName, the order the door preview draws
+-- them in. If the first god has no entry, it falls back to the old behavior:
+-- chapter only, both rows marked.
 local function handleDevotionReward(game, room)
     local encounter = room.Encounter or {}
     game.CodexStatus.SelectedChapterName = DEVOTION_CHAPTER
-    splitFlag = { chapter = DEVOTION_CHAPTER, names = { encounter.LootAName, encounter.LootBName } }
-    logAlways(("split door (Devotion): chapter=%s, gods=%s/%s")
-        :format(DEVOTION_CHAPTER, tostring(encounter.LootAName), tostring(encounter.LootBName)))
+    local chapterA, entryA = findCodexMatch(game, encounter.LootAName)
+    if chapterA == DEVOTION_CHAPTER and entryA ~= nil then
+        game.CodexStatus.SelectedEntryNames[DEVOTION_CHAPTER] = entryA
+        splitFlag = { chapter = DEVOTION_CHAPTER, names = { encounter.LootBName } }
+    else
+        splitFlag = { chapter = DEVOTION_CHAPTER, names = { encounter.LootAName, encounter.LootBName } }
+    end
+    logAlways(("split door (Devotion): chapter=%s, gods=%s/%s, opened on %s")
+        :format(DEVOTION_CHAPTER, tostring(encounter.LootAName), tostring(encounter.LootBName),
+                tostring(game.CodexStatus.SelectedEntryNames[DEVOTION_CHAPTER])))
 end
 
 -- room.CageRewards is a list of { RewardType, ForceLootName } entries
@@ -258,15 +286,14 @@ end
 -- Falls back to Melinoe's page if none resolve. See DESIGN.md for the policy
 -- behind "first that resolves."
 local function handleCageRewards(game, room)
-    local chapter = nil
+    local chapter, first = nil, nil
     local marked = {}
     for _, cageReward in ipairs(room.CageRewards) do
         local rewardName = cageReward.ForceLootName or cageReward.RewardType
         local chapterName, entryName = findCodexMatch(game, rewardName)
         if chapterName ~= nil and chapter == nil then
-            chapter = chapterName
-        end
-        if chapterName ~= nil and chapterName == chapter then
+            chapter, first = chapterName, entryName
+        elseif chapterName ~= nil and chapterName == chapter then
             marked[#marked + 1] = entryName
         end
     end
@@ -275,10 +302,12 @@ local function handleCageRewards(game, room)
         game.CodexStatus.SelectedEntryNames[FALLBACK_CHAPTER] = FALLBACK_ENTRY
         return
     end
+    -- Same shape as Devotion: open on the first, mark the rest.
     game.CodexStatus.SelectedChapterName = chapter
+    game.CodexStatus.SelectedEntryNames[chapter] = first
     splitFlag = { chapter = chapter, names = marked }
-    logAlways(("split door (CageRewards): chapter=%s, entries=%s")
-        :format(chapter, table.concat(marked, ",")))
+    logAlways(("split door (CageRewards): chapter=%s, opened on %s, marked=%s")
+        :format(chapter, tostring(first), table.concat(marked, ",")))
 end
 
 local function handleDoorRewards(game)
@@ -367,7 +396,8 @@ local function installHooks(game)
 
     -- Rows are built here (CodexLogic.lua:404-426). Re-format the ones hook one
     -- flagged, once the base call has finished building every row in the
-    -- chapter, using vanilla's own UnreadUnselectedFormat call (:501).
+    -- chapter, through the ModifyTextBox call vanilla uses for its own
+    -- formats (:501), with this mod's SPLIT_ROW_FORMAT.
     ModUtil.Path.Wrap("CodexOpenChapter", function(base, screen, button, args)
         base(screen, button, args)
 
@@ -382,7 +412,7 @@ local function installHooks(game)
             for _, entryName in ipairs(splitFlag.names) do
                 local component = entryName ~= nil and screen.Components[entryName] or nil
                 if component ~= nil then
-                    local fmt = game.ShallowCopyTable(screen.UnreadUnselectedFormat)
+                    local fmt = game.ShallowCopyTable(SPLIT_ROW_FORMAT)
                     fmt.Id = component.Id
                     game.ModifyTextBox(fmt)
                 end
