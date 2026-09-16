@@ -8,7 +8,8 @@ showing what waits in the next room. This mod closes that gap. Stand near a
 door showing a boon, open the Codex, and it opens on that god's page.
 
 Works on every door reward that has a Codex entry: any god boon, and the
-Daedalus Hammer, which lands on whichever weapon you are currently using. A
+Daedalus Hammer, which lands on whichever weapon you are currently using. The
+Rift of Thessaly's steering wheel counts as a door for this. A
 door offering health, mana, darkness, nectar or another consumable has no
 page to jump to, so it opens Melinoe's own page instead.
 

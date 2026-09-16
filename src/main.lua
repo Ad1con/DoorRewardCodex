@@ -187,17 +187,27 @@ end
 -- Walks MapState.OfferedExitDoors (RoomLogic.lua:319), a table keyed by
 -- object id, rather than searching a group -- door previews are in no group
 -- SelectNearbyUnlockedEntry's own GetClosest call reaches.
+--
+-- The Rift of Thessaly has no doors. Its ship encounter puts the choice on
+-- one or two steering wheels (RoomLogic.lua:1387-1431), kept in
+-- MapState.ShipWheels, and the reward lives on the wheel obstacle itself:
+-- ChosenRewardType and ForceLootName are set on it, and its .Room is the
+-- CURRENT room, not the next one. Reported 2026-09-16: the Codex sat on
+-- whatever it last showed, because nothing here knew a wheel from a wall.
+-- Both tables are walked; the closest of either wins.
 local function closestOfferedDoor(game)
     local heroId = game.CurrentRun.Hero.ObjectId
-    local closestDoor, closestDistance = nil, nil
-    for _, door in pairs(game.MapState.OfferedExitDoors or {}) do
-        local distance = game.GetDistance({ Id = heroId, DestinationId = door.ObjectId })
+    local closest, closestDistance, closestIsWheel = nil, nil, false
+    local function consider(object, isWheel)
+        local distance = game.GetDistance({ Id = heroId, DestinationId = object.ObjectId })
         if distance ~= nil and distance <= SEARCH_DISTANCE
             and (closestDistance == nil or distance < closestDistance) then
-            closestDoor, closestDistance = door, distance
+            closest, closestDistance, closestIsWheel = object, distance, isWheel
         end
     end
-    return closestDoor
+    for _, door in pairs(game.MapState.OfferedExitDoors or {}) do consider(door, false) end
+    for _, wheel in pairs(game.MapState.ShipWheels or {}) do consider(wheel, true) end
+    return closest, closestIsWheel
 end
 
 -- =============================================================================
@@ -272,13 +282,26 @@ local function handleCageRewards(game, room)
 end
 
 local function handleDoorRewards(game)
-    local door = closestOfferedDoor(game)
-    if door == nil or door.Room == nil then
+    local door, isWheel = closestOfferedDoor(game)
+    if door == nil then
         return
     end
-    local room = door.Room
 
     game.CodexStatus.SelectedEntryNames = game.CodexStatus.SelectedEntryNames or {}
+
+    -- A wheel carries its own reward; hand it to the single-reward path as
+    -- the "room" it reads. Devotion and cage doors never come on a wheel:
+    -- ChooseRoomReward is called per wheel with the ordinary reward store.
+    if isWheel then
+        handleSingleReward(game, { ForceLootName = door.ForceLootName,
+                                   ChosenRewardType = door.ChosenRewardType })
+        return
+    end
+
+    local room = door.Room
+    if room == nil then
+        return
+    end
 
     if room.ChosenRewardType == "Devotion" then
         handleDevotionReward(game, room)
