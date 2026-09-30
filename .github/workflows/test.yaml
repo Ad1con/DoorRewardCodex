@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+jobs:
+  test:
+    name: Lua 5.4 and LuaJIT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install Lua 5.4 and LuaJIT
+        run: sudo apt-get update -q && sudo apt-get install -y -q lua5.4 luajit
+
+      - name: Run the suite on Lua 5.4
+        working-directory: test
+        run: lua5.4 run_tests.lua
+
+      - name: Run the suite on LuaJIT (the game's interpreter)
+        working-directory: test
+        run: luajit run_tests.lua
