@@ -1,0 +1,5 @@
+# Text is stored and checked out as LF on every machine, whatever the local
+# core.autocrlf says, so edits and tools see the same bytes git stores.
+# guard.sh in particular must stay LF: a CRLF shebang gives "bad interpreter".
+* text=auto eol=lf
+*.png binary
