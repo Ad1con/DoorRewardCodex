@@ -76,6 +76,14 @@ no later reward roll.
 
 **[Hades2BlindAccessibility](https://github.com/Lirin111/Hades2BlindAccessibility) by Lirin111** reads the same door and steering-wheel tables this mod reads, and neither writes to them. It binds the Codex key only while the boon-info screen is open, where it opens its own menu; pressing Codex out in the room opens the game's Codex as usual, which is when this mod acts. The two never run at the same moment.
 
+## AI usage
+
+All of the code in this mod was written by Claude, Anthropic's AI model,
+under Adicon's direction. The design, every decision about what it should
+and shouldn't do, and the in-game testing and tuning are Adicon's.
+No AI-generated art is used: the icon and all art come from the game's own
+files.
+
 ## Credits
 
 Hades II is by [Supergiant Games](https://www.supergiantgames.com/). This is
