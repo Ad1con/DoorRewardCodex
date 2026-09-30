@@ -78,11 +78,10 @@ no later reward roll.
 
 ## AI usage
 
-All of the code in this mod was written by Claude, Anthropic's AI model,
-under Adicon's direction. The design, every decision about what it should
-and shouldn't do, and the in-game testing and tuning are Adicon's.
-No AI-generated art is used: the icon and all art come from the game's own
-files.
+Code in this mod was written by Claude under Adicon's direction. The design,
+planning, functionality decisions, and in-game testing and tuning are
+Adicon's. No AI-generated art is used: the icon and all art come from the
+game's own files.
 
 ## Credits
 
